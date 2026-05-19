@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CS-Cart Sustainability AI Engine</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;background:#0a0f1e;color:#e2e8f0;min-height:100vh}
+
+  .header{background:linear-gradient(135deg,#064e3b 0%,#065f46 100%);padding:28px 32px;border-bottom:1px solid rgba(255,255,255,0.08)}
+  .header h1{font-size:1.6rem;font-weight:800;color:#fff;margin-bottom:4px}
+  .header p{color:rgba(255,255,255,0.6);font-size:.88rem}
+  .badge{display:inline-block;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:20px;padding:3px 12px;font-size:.75rem;color:#6ee7b7;margin-top:8px}
+
+  .container{max-width:960px;margin:0 auto;padding:32px 20px}
+
+  .card{background:#111827;border:1px solid #1f2937;border-radius:16px;padding:28px;margin-bottom:24px}
+  .section-title{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6ee7b7;margin-bottom:20px}
+
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+
+  label{display:block;font-size:.8rem;font-weight:600;color:#94a3b8;margin-bottom:6px}
+  select,input{width:100%;background:#1f2937;border:1px solid #374151;border-radius:10px;padding:11px 14px;color:#e2e8f0;font-size:.88rem;font-family:'Inter',sans-serif;outline:none;transition:border-color .2s}
+  select:focus,input:focus{border-color:#059669}
+
+  .material-row{display:flex;gap:10px;align-items:center;margin-bottom:10px}
+  .material-row select{flex:2}
+  .material-row input{flex:1}
+  .material-row span{color:#6b7280;font-size:.8rem;white-space:nowrap}
+
+  .btn{background:linear-gradient(135deg,#059669,#047857);color:#fff;border:none;border-radius:10px;padding:14px 32px;font-size:.95rem;font-weight:700;cursor:pointer;width:100%;transition:opacity .2s;font-family:'Inter',sans-serif}
+  .btn:hover{opacity:.9}
+
+  /* Results */
+  #results{display:none}
+  .grade-box{text-align:center;padding:28px;border-radius:16px;margin-bottom:24px}
+  .grade-letter{font-size:5rem;font-weight:900;line-height:1}
+  .grade-label{font-size:.9rem;margin-top:8px;opacity:.85}
+  .grade-co2{font-size:1.1rem;font-weight:700;margin-top:12px}
+
+  .kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
+  .kpi{background:#1f2937;border:1px solid #374151;border-radius:12px;padding:16px;text-align:center}
+  .kpi-val{font-size:1.6rem;font-weight:800;color:#6ee7b7}
+  .kpi-lbl{font-size:.72rem;color:#6b7280;margin-top:4px;text-transform:uppercase;letter-spacing:.05em}
+
+  .breakdown-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #1f2937;font-size:.85rem}
+  .breakdown-row:last-child{border-bottom:none}
+  .breakdown-row span:first-child{color:#94a3b8}
+  .breakdown-row span:last-child{color:#e2e8f0;font-weight:600}
+
+  .bar-wrap{background:#1f2937;border-radius:8px;height:8px;margin-top:6px;overflow:hidden}
+  .bar-fill{height:100%;border-radius:8px;background:linear-gradient(90deg,#059669,#6ee7b7);transition:width .8s ease}
+
+  .vs-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.75rem;font-weight:700}
+  .vs-better{background:#064e3b;color:#6ee7b7}
+  .vs-worse{background:#450a0a;color:#fca5a5}
+
+  .api-link{text-align:center;margin-top:16px}
+  .api-link a{color:#059669;font-size:.82rem;text-decoration:none}
+  .api-link a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🌿 CS-Cart Sustainability AI Engine</h1>
+  <p>Real-time CO₂ footprint calculator · Eco grading A–E · Built with FastAPI + SQLAlchemy</p>
+  <span class="badge">Live Demo</span>
+</div>
+
+<div class="container">
+
+  <!-- Input Card -->
+  <div class="card">
+    <div class="section-title">Product Details</div>
+    <div class="grid-2" style="margin-bottom:16px">
+      <div>
+        <label>Product Category</label>
+        <select id="category">
+          <option value="apparel_tshirt_cotton">T-Shirt (Cotton)</option>
+          <option value="apparel_shirt_cotton">Shirt (Cotton)</option>
+          <option value="footwear_leather_shoes_pair">Leather Shoes (Pair)</option>
+          <option value="apparel_jeans_denim">Jeans (Denim)</option>
+          <option value="apparel_sweater_wool">Sweater (Wool)</option>
+          <option value="apparel_coat">Coat</option>
+        </select>
+      </div>
+      <div>
+        <label>Product Weight (grams)</label>
+        <input type="number" id="weight" value="200" min="10" max="5000"/>
+      </div>
+    </div>
+
+    <div class="section-title">Primary Material</div>
+    <div id="materials">
+      <div class="material-row">
+        <select class="mat-type">
+          <option value="cotton">Cotton</option>
+          <option value="polyester">Polyester</option>
+          <option value="wool">Wool</option>
+          <option value="viscose">Viscose</option>
+          <option value="acrylic">Acrylic</option>
+          <option value="silk">Silk</option>
+          <option value="polyamide">Polyamide</option>
+        </select>
+        <input class="mat-share" type="number" value="100" min="1" max="100"/>
+        <span>% share</span>
+      </div>
+    </div>
+    <button type="button" onclick="addMaterial()" style="background:none;border:1px solid #374151;color:#6ee7b7;border-radius:8px;padding:6px 14px;font-size:.78rem;cursor:pointer;margin-top:8px;font-family:Inter,sans-serif">+ Add Material</button>
+
+    <div class="grid-2" style="margin-top:20px">
+      <div>
+        <label>Shipping Mode</label>
+        <select id="shipMode">
+          <option value="air">✈️ Air Freight</option>
+          <option value="sea" selected>🚢 Sea Freight</option>
+          <option value="rail">🚂 Rail</option>
+        </select>
+      </div>
+      <div>
+        <label>Shipping Distance (km)</label>
+        <input type="number" id="distance" value="5000" min="10"/>
+      </div>
+    </div>
+
+    <button class="btn" style="margin-top:24px" onclick="calculate()">⚡ Calculate CO₂ Impact</button>
+  </div>
+
+  <!-- Results -->
+  <div id="results">
+
+    <div class="grade-box" id="gradeBox">
+      <div class="grade-letter" id="gradeLetter">A</div>
+      <div class="grade-label" id="gradeLabel">Excellent environmental performance</div>
+      <div class="grade-co2" id="gradeCo2">0.000 kg CO₂e</div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi"><div class="kpi-val" id="kpiWater">0</div><div class="kpi-lbl">Litres Water</div></div>
+      <div class="kpi"><div class="kpi-val" id="kpiWaste">0</div><div class="kpi-lbl">kg Waste</div></div>
+      <div class="kpi"><div class="kpi-val" id="kpiConf">0%</div><div class="kpi-lbl">Confidence</div></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">CO₂ Breakdown</div>
+      <div id="breakdownRows"></div>
+      <div style="margin-top:16px">
+        <div style="font-size:.78rem;color:#6b7280;margin-bottom:6px">Total CO₂ vs max scale</div>
+        <div class="bar-wrap"><div class="bar-fill" id="barFill" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Category Comparison</div>
+      <div id="categoryComp"></div>
+    </div>
+
+    <div class="api-link">
+      <a href="/docs" target="_blank">🔗 Explore full REST API →</a>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const CATEGORY_BASELINE = {
+  apparel_tshirt_cotton: 6.43, apparel_shirt_cotton: 13.2,
+  footwear_leather_shoes_pair: 15, apparel_jeans_denim: 25.1,
+  apparel_sweater_wool: 56.7, apparel_coat: 101
+};
+const MATERIAL_IMPACT = {
+  cotton:    {carbon:28, water:3.1,  waste:1.6},
+  polyester: {carbon:21, water:0.1,  waste:1.4},
+  viscose:   {carbon:30, water:3.85, waste:1.6},
+  acrylic:   {carbon:38, water:0.15, waste:1.4},
+  wool:      {carbon:46, water:2.25, waste:1.6},
+  polyamide: {carbon:24, water:0.1,  waste:1.4},
+  silk:      {carbon:25, water:58,   waste:1.6}
+};
+const TRANSPORT_FACTORS = {air:0.89939, rail:0.02779, sea:0.00353};
+const GRADE_CONFIG = {
+  A:{color:'#064e3b',text:'#6ee7b7',label:'Excellent environmental performance'},
+  B:{color:'#14532d',text:'#86efac',label:'Good environmental performance'},
+  C:{color:'#78350f',text:'#fcd34d',label:'Average environmental impact'},
+  D:{color:'#7c2d12',text:'#fdba74',label:'High environmental impact'},
+  E:{color:'#450a0a',text:'#fca5a5',label:'Very high environmental impact'}
+};
+
+function ecoGrade(co2){
+  if(co2<=5) return 'A'; if(co2<=10) return 'B';
+  if(co2<=20) return 'C'; if(co2<=40) return 'D'; return 'E';
+}
+
+function addMaterial(){
+  const div=document.createElement('div'); div.className='material-row';
+  div.innerHTML=`<select class="mat-type">
+    <option value="cotton">Cotton</option><option value="polyester">Polyester</option>
+    <option value="wool">Wool</option><option value="viscose">Viscose</option>
+    <option value="acrylic">Acrylic</option><option value="silk">Silk</option>
+    <option value="polyamide">Polyamide</option></select>
+    <input class="mat-share" type="number" value="0" min="0" max="100"/>
+    <span>% share</span>
+    <button onclick="this.parentElement.remove()" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:1.1rem">×</button>`;
+  document.getElementById('materials').appendChild(div);
+}
+
+function calculate(){
+  const catCode = document.getElementById('category').value;
+  const weightG = parseFloat(document.getElementById('weight').value)||200;
+  const shipMode = document.getElementById('shipMode').value;
+  const distKm = parseFloat(document.getElementById('distance').value)||1000;
+  const weightKg = weightG/1000;
+
+  const baseline = CATEGORY_BASELINE[catCode]||0;
+
+  // Materials
+  const matTypes = document.querySelectorAll('.mat-type');
+  const matShares = document.querySelectorAll('.mat-share');
+  let matCarbon=0, matWater=0, matWaste=0;
+  matTypes.forEach((sel,i)=>{
+    const mat=MATERIAL_IMPACT[sel.value]; if(!mat) return;
+    const share=parseFloat(matShares[i].value||0)/100;
+    const sw=weightKg*share;
+    matCarbon+=sw*mat.carbon; matWater+=sw*mat.water*1000; matWaste+=sw*mat.waste;
+  });
+
+  // Transport
+  const tf = TRANSPORT_FACTORS[shipMode]||0;
+  const transportCo2 = (weightKg/1000)*distKm*tf;
+
+  const total = matCarbon + transportCo2 + baseline;
+  const grade = ecoGrade(total);
+  const cfg = GRADE_CONFIG[grade];
+  const conf = Math.max(0.7, 1 - (matTypes.length===0?0.2:0));
+
+  // Render
+  const gb=document.getElementById('gradeBox');
+  gb.style.background=cfg.color; gb.style.border='2px solid '+cfg.text+'44';
+  document.getElementById('gradeLetter').style.color=cfg.text;
+  document.getElementById('gradeLetter').textContent=grade;
+  document.getElementById('gradeLabel').textContent=cfg.label;
+  document.getElementById('gradeLabel').style.color=cfg.text;
+  document.getElementById('gradeCo2').textContent=total.toFixed(3)+' kg CO₂e';
+  document.getElementById('gradeCo2').style.color=cfg.text;
+
+  document.getElementById('kpiWater').textContent=matWater.toFixed(1);
+  document.getElementById('kpiWaste').textContent=matWaste.toFixed(3);
+  document.getElementById('kpiConf').textContent=Math.round(conf*100)+'%';
+
+  const rows=[
+    ['Material Carbon',matCarbon.toFixed(3)+' kg'],
+    ['Transport CO₂',transportCo2.toFixed(3)+' kg'],
+    ['Category Baseline',baseline.toFixed(3)+' kg'],
+    ['TOTAL',total.toFixed(3)+' kg CO₂e'],
+  ];
+  document.getElementById('breakdownRows').innerHTML=rows.map(([k,v])=>
+    `<div class="breakdown-row"><span>${k}</span><span>${v}</span></div>`).join('');
+  document.getElementById('barFill').style.width=Math.min(100,total/1.01)+'%';
+
+  const diff=total-baseline; const sign=diff>0?'+':'';
+  const cls=diff<=0?'vs-better':'vs-worse';
+  document.getElementById('categoryComp').innerHTML=`
+    <div class="breakdown-row"><span>Category average (${catCode.replace(/_/g,' ')})</span><span>${baseline} kg CO₂e</span></div>
+    <div class="breakdown-row"><span>Your product</span><span>${total.toFixed(3)} kg CO₂e</span></div>
+    <div class="breakdown-row"><span>Difference</span><span><span class="vs-badge ${cls}">${sign}${diff.toFixed(3)} kg</span></span></div>`;
+
+  document.getElementById('results').style.display='block';
+  document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
+}
+</script>
+</body>
+</html>

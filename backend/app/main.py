@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+import os
 
 # DB
 from app.db.database import engine
@@ -34,14 +37,21 @@ app.add_middleware(
 )
 
 # -------------------------------------------------
+# Static files + Demo page
+# -------------------------------------------------
+STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+@app.get("/", include_in_schema=False)
+def demo():
+    return FileResponse(os.path.join(STATIC_DIR, "index.html"))
+
+# -------------------------------------------------
 # Health Check
 # -------------------------------------------------
 @app.get("/health")
 def health():
-    return {
-        "status": "running",
-        "service": "AI + CO2 Engine"
-    }
+    return {"status": "running", "service": "AI + CO2 Engine"}
 
 # -------------------------------------------------
 # API Routers
