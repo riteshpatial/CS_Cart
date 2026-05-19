@@ -11,18 +11,13 @@ ENV_PATH = os.path.join(BASE_DIR, ".env")
 
 load_dotenv(ENV_PATH)
 
-DATABASE_URL = os.getenv("DATABASE_URL")
-
-if not DATABASE_URL:
-    raise RuntimeError("DATABASE_URL not found. Check .env location.")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./events.db")
 
 # -------------------------------------------------
 # SQLAlchemy Engine
 # -------------------------------------------------
-engine = create_engine(
-    DATABASE_URL,
-    pool_pre_ping=True
-)
+connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+engine = create_engine(DATABASE_URL, pool_pre_ping=True, connect_args=connect_args)
 
 # -------------------------------------------------
 # Session Factory
